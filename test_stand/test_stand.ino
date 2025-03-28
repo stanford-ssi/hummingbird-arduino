@@ -1,21 +1,29 @@
-#include <SPI.h>
+/*
+Test Stand
+RX: Receives commands from ground station and activates the desired valves
+TX: Collects data from sensors and transmits them to the ground station
+*/
+
 #include <RH_RF95.h>
+#include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_MCP9600.h>
 
-#define RFM95_CS   10    // Chip Select pin for LoRa
-#define RFM95_RST  1     // Reset pin for LoRa
-#define RFM95_INT  0     // Interrupt pin for LoRa
+#define RFM95_CS   10     // CS pin for radio module
+#define RFM95_RST  1      // RST pin for radio module
+#define RFM95_INT  0      // G0 (Interupt) for radio module
 
+// RH_RF95 object for radio module
 #define RF95_FREQ 915.0
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
-// Sensor pins and objects
-const int analogSensorPin = 23;  // Analog sensor (Teensy 4.1 A9)
-const int ledPin = 33;           // LED pin for status
-bool ledState = false;
+// MCP9600 object for thermocouple sensor
+Adafruit_MCP9600 mcp;
 
-Adafruit_MCP9600 mcp;  // MCP9600 thermocouple sensor instance
+// Sensor and actuator pins
+const int analogSensorPin = 23;  // Analog sensor on Teensy 4.1 A9 (in place of PT)
+const int ledPin = 33;           // LED pin (in place of actuator)
+bool ledState = false;
 
 // Transmission timing variables
 unsigned long lastSensorTransmit = 0;
@@ -24,34 +32,31 @@ const unsigned long sensorInterval = 1000; // Transmit every 1 second
 void setup() {
   Serial.begin(9600);
   while (!Serial && millis() < 5000);  // Wait up to 5 seconds for Serial
-  Serial.println("LoRa Satellite starting...");
+  Serial.println("Test Stand starting...");
 
-  // Setup sensor and status pins
+  // Initalize sensor and actuator pins
   pinMode(analogSensorPin, INPUT);
   pinMode(ledPin, OUTPUT);
-  pinMode(RFM95_RST, OUTPUT);
-
-  // Initialize I2C for the MCP9600 sensor
-  Wire.begin();
 
   // Initialize the MCP9600 sensor
+  Wire.begin(); // Initalize I2C
   if (!mcp.begin()) {
     Serial.println("MCP9600 not found. Check wiring!");
     while (1);
   }
-  // Set thermocouple type (K-type)
-  mcp.setThermocoupleType(MCP9600_TYPE_K);
+  mcp.setThermocoupleType(MCP9600_TYPE_K);  // Set thermocouple type (K-type)
 
-  // Reset LoRa module
+  // Set pins for, and reset, radio module
+  pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
   digitalWrite(RFM95_RST, LOW);
   delay(10);
   digitalWrite(RFM95_RST, HIGH);
   delay(10);
 
-  // Initialize LoRa module
+  // Initialize radio module
   if (!rf95.init()){
-    Serial.println("LoRa init failed!");
+    Serial.println("Radio init failed!");
     while (1);
   }
   if (!rf95.setFrequency(RF95_FREQ)){
@@ -59,15 +64,17 @@ void setup() {
     while (1);
   }
   rf95.setTxPower(23, false);
-  Serial.println("LoRa Satellite init succeeded.");
+  Serial.println("Radio init succeeded.");
 }
 
 void loop() {
-  // Check for incoming LoRa commands (non-blocking)
+  // RX: Check for incoming radio commands (non-blocking)
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
     if (rf95.recv(buf, &len)) {
+
+      // Proccess incoming command into a string
       String received = "";
       for (uint8_t i = 0; i < len; i++) {
         received += (char)buf[i];
@@ -76,7 +83,7 @@ void loop() {
       Serial.print("Received command: ");
       Serial.println(received);
       
-      // Process command to control LED
+      // Evaluate the command
       if (received.equalsIgnoreCase("ON")) {
         ledState = true;
         Serial.println("LED set to ON");
@@ -86,32 +93,32 @@ void loop() {
       } else {
         Serial.println("Unrecognized command.");
       }
+
     }
   }
   
-  // Update LED state
+  // Update actuator state according to command
   digitalWrite(ledPin, ledState ? HIGH : LOW);
   
-  // Transmit sensor data every sensorInterval milliseconds
+  // TX: Transmit sensor data every "sensorInterval" milliseconds
   unsigned long currentMillis = millis();
   if (currentMillis - lastSensorTransmit >= sensorInterval) {
     lastSensorTransmit = currentMillis;
     
-    // Read analog sensor value and thermocouple temperature
-    int analogValue = analogRead(analogSensorPin);
-    float thermocoupleTemp = mcp.readThermocouple();
+    // Read sensor values
+    int analogValue = analogRead(analogSensorPin);      // Pressure trandsucer
+    float thermocoupleTemp = mcp.readThermocouple();    // Thermocouple
     
     // Build a sensor data string that includes a timestamp (in milliseconds)
-    // Format: "TIME:<timestamp>,ANALOG:<value>,TC:<temperature>"
+    // Format: "TIME:<timestamp>,PT:<value>,TT:<temperature>"
     String sensorStr = "TIME:" + String(currentMillis) +
-                       ",ANALOG:" + String(analogValue) +
-                       ",TC:" + String(thermocoupleTemp, 2);
-    
-    // Print the sensor data for debugging/sanity check
+                       ",PT:" + String(analogValue) +
+                       ",TT:" + String(thermocoupleTemp, 2);
+
     Serial.print("Sending sensor reading: ");
     Serial.println(sensorStr);
     
-    // Transmit the sensor data string via LoRa
+    // Transmit the sensor data string via radio
     rf95.send((uint8_t *)sensorStr.c_str(), sensorStr.length());
     rf95.waitPacketSent();
   }
