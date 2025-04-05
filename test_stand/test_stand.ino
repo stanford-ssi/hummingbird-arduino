@@ -22,7 +22,7 @@ Adafruit_MCP9600 mcp;
 
 // Sensor and actuator pins
 const int analogSensorPin1 = 23;  // Analog sensor on Teensy 4.1 A9 (in place of PT)
-const int analogSensorPin2 = 24;
+const int analogSensorPin2 = 22;
 const int ledPin = 33;           // LED pin (in place of actuator)
 bool ledState = false;
 

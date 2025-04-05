@@ -52,7 +52,7 @@ void setup() {
   Serial.println("Radio init succeeded.");
 
   // create SD header
-  dataFile.SD.open("data-040425.txt", FILE_WRITE); // file where data will be stored
+  dataFile = SD.open("data-040425.txt", FILE_WRITE); // file where data will be stored
   dataFile.println("Hydrostatic Testing Test Result");
   dataFile.println("*************************");
   dataFile.println("Time (ms), Pressure (psi)");
