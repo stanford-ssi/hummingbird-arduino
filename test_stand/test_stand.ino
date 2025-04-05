@@ -21,7 +21,8 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 Adafruit_MCP9600 mcp;
 
 // Sensor and actuator pins
-const int analogSensorPin = 23;  // Analog sensor on Teensy 4.1 A9 (in place of PT)
+const int analogSensorPin1 = 23;  // Analog sensor on Teensy 4.1 A9 (in place of PT)
+const int analogSensorPin2 = 24;
 const int ledPin = 33;           // LED pin (in place of actuator)
 bool ledState = false;
 
@@ -35,7 +36,8 @@ void setup() {
   Serial.println("Test Stand starting...");
 
   // Initalize sensor and actuator pins
-  pinMode(analogSensorPin, INPUT);
+  pinMode(analogSensorPin1, INPUT);
+  pinMode(analogSensorPin2, INPUT);
   pinMode(ledPin, OUTPUT);
 
   // Initialize the MCP9600 sensor
@@ -106,14 +108,15 @@ void loop() {
     lastSensorTransmit = currentMillis;
     
     // Read sensor values
-    int analogValue = analogRead(analogSensorPin);      // Pressure trandsucer
-    float thermocoupleTemp = mcp.readThermocouple();    // Thermocouple
+    int pt1_val = analogRead(analogSensorPin1);      // Pressure trandsucer
+    int pt2_val = analogRead(analogSensorPin2);      // Pressure trandsucer
+    // float thermocoupleTemp = mcp.readThermocouple();    // Thermocouple
     
     // Build a sensor data string that includes a timestamp (in milliseconds)
     // Format: "TIME:<timestamp>,PT:<value>,TT:<temperature>"
-    String sensorStr = "TIME:" + String(currentMillis) +
-                       ",PT:" + String(analogValue) +
-                       ",TT:" + String(thermocoupleTemp, 2);
+    String sensorStr = String(currentMillis) +
+                       ", " + String(analogValue); // +
+                       // ", " + String(thermocoupleTemp, 2);
 
     Serial.print("Sending sensor reading: ");
     Serial.println(sensorStr);
