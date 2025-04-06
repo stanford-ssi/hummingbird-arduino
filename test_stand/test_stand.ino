@@ -41,13 +41,13 @@ void setup() {
   pinMode(ledPin, OUTPUT);
 
   // Initialize the MCP9600 sensor
-  Wire.begin(); // Initalize I2C
+  /*Wire.begin(); // Initalize I2C
   if (!mcp.begin()) {
     Serial.println("MCP9600 not found. Check wiring!");
     while (1);
   }
   mcp.setThermocoupleType(MCP9600_TYPE_K);  // Set thermocouple type (K-type)
-
+  */
   // Set pins for, and reset, radio module
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -115,7 +115,8 @@ void loop() {
     // Build a sensor data string that includes a timestamp (in milliseconds)
     // Format: "TIME:<timestamp>,PT:<value>,TT:<temperature>"
     String sensorStr = String(currentMillis) +
-                       ", " + String(analogValue); // +
+                       ", " + String(pt1_val) +
+                       ", " + String(pt2_val); // +
                        // ", " + String(thermocoupleTemp, 2);
 
     Serial.print("Sending sensor reading: ");

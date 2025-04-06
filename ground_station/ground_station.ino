@@ -18,6 +18,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // File object for SD card logging
 File dataFile;
+#define FILENAME "data-T2-040425.txt"
 
 void setup() {
   Serial.begin(9600);
@@ -52,10 +53,10 @@ void setup() {
   Serial.println("Radio init succeeded.");
 
   // create SD header
-  dataFile = SD.open("data-040425.txt", FILE_WRITE); // file where data will be stored
+  dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
   dataFile.println("Hydrostatic Testing Test Result");
   dataFile.println("*************************");
-  dataFile.println("Time (ms), Pressure (psi)");
+  dataFile.println("Time (ms), Pressure 1 (psi), Pressure 2 (psi)");
   dataFile.close();
 
 }
@@ -89,7 +90,7 @@ void loop() {
       Serial.println(received);
       
       // Log the sensor data to the SD card
-      dataFile = SD.open("data.txt", FILE_WRITE); // file where data will be stored
+      dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
       if (dataFile) {
         dataFile.println(received);
         dataFile.close();
