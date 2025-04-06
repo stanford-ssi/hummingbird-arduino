@@ -8,6 +8,7 @@ TX: Collects data from sensors and transmits them to the ground station
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_MCP9600.h>
+#include "Adafruit_HX711.h"
 
 #define RFM95_CS   10     // CS pin for radio module
 #define RFM95_RST  1      // RST pin for radio module
@@ -30,6 +31,38 @@ bool ledState = false;
 unsigned long lastSensorTransmit = 0;
 const unsigned long sensorInterval = 1000; // Transmit every 1 second
 
+// Pins for HX711 Communication
+const uint8_t DATA_PIN = 2;
+const uint8_t CLOCK_PIN = 3;
+
+// HX711 Object for load cell sensor
+Adafruit_HX711 hx711(DATA_PIN, CLOCK_PIN);
+
+void init_hx711(){
+  hx711.begin();
+  Serial.println("Tareing...");
+
+  for (uint8_t t=0; t<3; t++) {
+    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_128));
+    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_128));
+    hx711.tareB(hx711.readChannelRaw(CHAN_B_GAIN_32));
+    hx711.tareB(hx711.readChannelRaw(CHAN_B_GAIN_32));
+  }
+}
+
+void hx711_loop(){
+  // Read from Channel A with Gain 128, can also try CHAN_A_GAIN_64 or CHAN_B_GAIN_32
+  // since the read is blocking this will not be more than 10 or 80 SPS (L or H switch)
+  int32_t weightA128 = hx711.readChannelBlocking(CHAN_A_GAIN_128);
+  Serial.print("Channel A (Gain 128): ");
+  Serial.println(weightA128);
+
+  // Read from Channel A with Gain 128, can also try CHAN_A_GAIN_64 or CHAN_B_GAIN_32
+  int32_t weightB32 = hx711.readChannelBlocking(CHAN_B_GAIN_32);
+  Serial.print("Channel B (Gain 32): ");
+  Serial.println(weightB32);
+}
+
 void setup() {
   Serial.begin(9600);
   while (!Serial && millis() < 5000);  // Wait up to 5 seconds for Serial
@@ -39,6 +72,9 @@ void setup() {
   pinMode(analogSensorPin1, INPUT);
   pinMode(analogSensorPin2, INPUT);
   pinMode(ledPin, OUTPUT);
+
+  // Initialize the HX711 Sensor
+  //init_hx711();
 
   // Initialize the MCP9600 sensor
   /*Wire.begin(); // Initalize I2C
