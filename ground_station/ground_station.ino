@@ -56,7 +56,7 @@ void setup() {
   dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
   dataFile.println("Hydrostatic Testing Test Result");
   dataFile.println("*************************");
-  dataFile.println("Time (ms),Pressure 1 (psi),Pressure 2 (psi)");
+  dataFile.println("Time (ms),Pressure 1,Pressure 2");
   dataFile.close();
 
 }

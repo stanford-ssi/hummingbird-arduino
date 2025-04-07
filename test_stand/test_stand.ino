@@ -115,8 +115,8 @@ void loop() {
     // Build a sensor data string that includes a timestamp (in milliseconds)
     // Format: "TIME:<timestamp>,PT:<value>,TT:<temperature>"
     String sensorStr = String(currentMillis) +
-                       ", " + String(pt1_val) +
-                       ", " + String(pt2_val); // +
+                       "," + String(pt1_val) +
+                       "," + String(pt2_val); // +
                        // ", " + String(thermocoupleTemp, 2);
 
     Serial.print("Sending sensor reading: ");
