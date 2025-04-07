@@ -7,7 +7,7 @@ TX: Collects data from sensors and transmits them to the ground station
 #include <RH_RF95.h>
 #include <SPI.h>
 #include <Wire.h>
-#include <Adafruit_MCP9600.h>
+// #include <Adafruit_MCP9600.h>
 
 #define RFM95_CS   10     // CS pin for radio module
 #define RFM95_RST  1      // RST pin for radio module
@@ -18,7 +18,7 @@ TX: Collects data from sensors and transmits them to the ground station
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // MCP9600 object for thermocouple sensor
-Adafruit_MCP9600 mcp;
+// Adafruit_MCP9600 mcp;
 
 // Sensor and actuator pins
 const int analogSensorPin1 = 23;  // Analog sensor on Teensy 4.1 A9 (in place of PT)

@@ -18,7 +18,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // File object for SD card logging
 File dataFile;
-#define FILENAME "data-T2-040425.txt"
+#define FILENAME "data-040625T1.txt"
 
 void setup() {
   Serial.begin(9600);
@@ -56,7 +56,7 @@ void setup() {
   dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
   dataFile.println("Hydrostatic Testing Test Result");
   dataFile.println("*************************");
-  dataFile.println("Time (ms), Pressure 1 (psi), Pressure 2 (psi)");
+  dataFile.println("Time (ms),Pressure 1 (psi),Pressure 2 (psi)");
   dataFile.close();
 
 }
