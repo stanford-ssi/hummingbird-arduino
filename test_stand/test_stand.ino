@@ -7,24 +7,26 @@ TX: Collects data from sensors and transmits them to the ground station
 #include <RH_RF95.h>
 #include <SPI.h>
 #include <Wire.h>
-#include <Adafruit_MCP9600.h>
-#include "Adafruit_HX711.h"
+// #include <Adafruit_MCP9600.h>
+// #include "Adafruit_HX711.h"
 
 #define RFM95_CS   10     // CS pin for radio module
 #define RFM95_RST  1      // RST pin for radio module
 #define RFM95_INT  0      // G0 (Interupt) for radio module
 
+/*
 //  I2C Addresses for different thermocouple amplifiers
 #define I2C_ADDRESS_TT1O (0x67)
 #define I2C_ADDRESS_TT1P (0x66)
 #define I2C_ADDRESS_TT1T (0x65)
 #define I2C_ADDRESS_TT2T (0x64)
 #define I2C_ADDRESS_TT3T (0x60)
-
+*/
 // RH_RF95 object for radio module
 #define RF95_FREQ 915.0
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+/*
 // MCP9600 object for thermocouple sensor
 Adafruit_MCP9600 mcp;
 Adafruit_MCP9600 TT1O, TT1P, TT1T, TT2T, TT3T;
@@ -39,14 +41,17 @@ const int analogSensorPin6 = 41;  // A17, used by PT1-N
 const int analogSensorPin7 = 40;  // A16, used by PT1-O
 const int analogSensorPin8 = 39;  // A15, used by PT1-P
 const int analogSensorPin9 = 38;  // A14, used by PT1-T
+*/
 
-const int ledPin = 33;           // LED pin (in place of actuator)
-bool ledState = false;
+const int mbv1 = 25;           // LED pin (in place of actuator)
+const int mbv2 = 26;
+bool mbv1_state, mbv2_state = false;
 
 // Transmission timing variables
 unsigned long lastSensorTransmit = 0;
 const unsigned long sensorInterval = 1000; // Transmit every 1 second
 
+/*
 // Pins for HX711 Communication
 const uint8_t DATA_PIN = 2;
 const uint8_t CLOCK_PIN = 3;
@@ -78,6 +83,7 @@ void hx711_loop(){
   Serial.print("Channel B (Gain 32): ");
   Serial.println(weightB32);
 }
+*/
 
 void setup() {
   Serial.begin(9600);
@@ -85,7 +91,7 @@ void setup() {
   Serial.println("Test Stand starting...");
 
   // Initalize sensor and actuator pins
-  pinMode(analogSensorPin1, INPUT);
+  /*pinMode(analogSensorPin1, INPUT);
   pinMode(analogSensorPin2, INPUT);
   pinMode(analogSensorPin3, INPUT);
   pinMode(analogSensorPin4, INPUT);
@@ -94,7 +100,7 @@ void setup() {
   pinMode(analogSensorPin7, INPUT);
   pinMode(analogSensorPin8, INPUT);
   pinMode(analogSensorPin9, INPUT);
-  pinMode(ledPin, OUTPUT);
+  pinMode(ledPin, OUTPUT);*/
 
   // Initialize the HX711 Sensor
   //init_hx711();
@@ -173,12 +179,18 @@ void loop() {
       Serial.println(received);
       
       // Evaluate the command
-      if (received.equalsIgnoreCase("ON")) {
-        ledState = true;
-        Serial.println("LED set to ON");
-      } else if (received.equalsIgnoreCase("OFF")) {
-        ledState = false;
-        Serial.println("LED set to OFF");
+      if (received.equalsIgnoreCase("1 ON")) {
+        mbv1_state = true;
+        Serial.println("Solenoid 1 set to ON");
+      } else if (received.equalsIgnoreCase("1 OFF")) {
+        mbv1_state = false;
+        Serial.println("Solenoid 1 set to OFF");
+      } else if (received.equalsIgnoreCase("1 OFF")) {
+        mbv2_state = true;
+        Serial.println("Solenoid 2 set to ON");
+      } else if (received.equalsIgnoreCase("2 ON")) {
+        mbv2_state = false;
+        Serial.println("Solenoid 2 set to ON");
       } else {
         Serial.println("Unrecognized command.");
       }
@@ -187,7 +199,8 @@ void loop() {
   }
   
   // Update actuator state according to command
-  digitalWrite(ledPin, ledState ? HIGH : LOW);
+  digitalWrite(mbv1, mbv1_state ? HIGH : LOW);
+  digitalWrite(mbv2, mbv2_state ? HIGH : LOW);
   
   // TX: Transmit sensor data every "sensorInterval" milliseconds
   unsigned long currentMillis = millis();
@@ -195,6 +208,7 @@ void loop() {
     lastSensorTransmit = currentMillis;
     
     // Read sensor values
+    /*
     int pt1_val = analogRead(analogSensorPin1);      // PT1-I
     int pt2_val = analogRead(analogSensorPin2);      // PT2-I
     int pt3_val = analogRead(analogSensorPin3);      // PT3-I
@@ -210,10 +224,10 @@ void loop() {
     float TT1T_temp = TT1T.readThermocouple();       // TT1-T
     float TT2T_temp = TT2T.readThermocouple();       // TT2-T
     float TT3T_temp = TT3T.readThermocouple();       // TT3-T
-    
+    */
     // Build a sensor data string that includes a timestamp (in milliseconds)
     // Format: "TIME:<timestamp>,PT:<value>,TT:<temperature>"
-    String sensorStr = String(currentMillis) +
+    /*String sensorStr = String(currentMillis) +
                        ", " + String(pt1_val) +
                        ", " + String(pt2_val) +
                        ", " + String(pt3_val) +
@@ -232,9 +246,13 @@ void loop() {
 
     Serial.print("Sending sensor reading: ");
     Serial.println(sensorStr);
-    
+    */
+
+    String valve_str = "Solenoid 1 state: " + String(mbv1_state) + ", Solenoid 2 state: " + String(mbv2_state);
+
     // Transmit the sensor data string via radio
-    rf95.send((uint8_t *)sensorStr.c_str(), sensorStr.length());
+    rf95.send((uint8_t *)valve_str.c_str(), valve_str.length());
     rf95.waitPacketSent();
+    
   }
 }

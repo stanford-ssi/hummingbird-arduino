@@ -26,11 +26,11 @@ void setup() {
   Serial.println("Ground Station starting...");
 
   // Initialize the built-in SD card
-  if (!SD.begin(BUILTIN_SDCARD)) {
+  /*if (!SD.begin(BUILTIN_SDCARD)) {
     Serial.println("SD Card initialization failed!");
   } else {
     Serial.println("SD Card initialized.");
-  }
+  }*/
 
   // Set pins for, and reset, radio module
   pinMode(RFM95_RST, OUTPUT);
@@ -53,12 +53,14 @@ void setup() {
   Serial.println("Radio init succeeded.");
 
   // create SD header
-  dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
+  /*dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
   dataFile.println("Hydrostatic Testing Test Result");
   dataFile.println("*************************");
   dataFile.println("Time (ms), PT1-I (psi), PT2-I (psi), PT3-I (psi), PT4-I (psi), PT5-I (psi), PT1-N (psi), PT1-O (psi), PT1-P (psi), PT1-T (psi)");
-  dataFile.close();
+  dataFile.close();*/
 
+  // Serial println default message
+  Serial.println("Message form: [Solenoid #] [\"ON\" or \"OFF\"]");
 }
 
 void loop() {
