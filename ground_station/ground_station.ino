@@ -53,11 +53,11 @@ void setup() {
   Serial.println("Radio init succeeded.");
 
   // create SD header
-  /*dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
+  dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
   dataFile.println("Hydrostatic Testing Test Result");
   dataFile.println("*************************");
-  dataFile.println("Time (ms), PT1-I (psi), PT2-I (psi), PT3-I (psi), PT4-I (psi), PT5-I (psi), PT1-N (psi), PT1-O (psi), PT1-P (psi), PT1-T (psi)");
-  dataFile.close();*/
+  dataFile.println("Time (ms),PT1,Solenoid 1,Solenoid 2");
+  dataFile.close();
 
   // Serial println default message
   Serial.println("Message form: [Solenoid #] [\"ON\" or \"OFF\"]");
@@ -94,6 +94,8 @@ void loop() {
       // Log the sensor data to the SD card
       dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
       if (dataFile) {
+        dataFile.print(millis());
+        dataFile.print(",");
         dataFile.println(received);
         dataFile.close();
         Serial.println("Data written to SD card.");

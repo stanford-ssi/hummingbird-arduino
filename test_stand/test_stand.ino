@@ -30,9 +30,10 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 // MCP9600 object for thermocouple sensor
 Adafruit_MCP9600 mcp;
 Adafruit_MCP9600 TT1O, TT1P, TT1T, TT2T, TT3T;
-
+*/
 // Sensor and actuator pins
 const int analogSensorPin1 = 23;  // Analog sensor on Teensy 4.1 A9 (in place of PT), used by PT1-I
+/*
 const int analogSensorPin2 = 22;  // A8, used by PT2-I
 const int analogSensorPin3 = 21;  // A7, used by PT3-I
 const int analogSensorPin4 = 16;  // A6, used by PT4-I
@@ -91,8 +92,8 @@ void setup() {
   Serial.println("Test Stand starting...");
 
   // Initalize sensor and actuator pins
-  /*pinMode(analogSensorPin1, INPUT);
-  pinMode(analogSensorPin2, INPUT);
+  pinMode(analogSensorPin1, INPUT);
+  /*pinMode(analogSensorPin2, INPUT);
   pinMode(analogSensorPin3, INPUT);
   pinMode(analogSensorPin4, INPUT);
   pinMode(analogSensorPin5, INPUT);
@@ -208,8 +209,8 @@ void loop() {
     lastSensorTransmit = currentMillis;
     
     // Read sensor values
-    /*
     int pt1_val = analogRead(analogSensorPin1);      // PT1-I
+    /*
     int pt2_val = analogRead(analogSensorPin2);      // PT2-I
     int pt3_val = analogRead(analogSensorPin3);      // PT3-I
     int pt4_val = analogRead(analogSensorPin4);      // PT4-I
@@ -248,7 +249,7 @@ void loop() {
     Serial.println(sensorStr);
     */
 
-    String valve_str = "Solenoid 1 state: " + String(mbv1_state) + ", Solenoid 2 state: " + String(mbv2_state);
+    String valve_str = String(pt1_val) + "," + String(mbv1_state) + "," + String(mbv2_state);
 
     // Transmit the sensor data string via radio
     rf95.send((uint8_t *)valve_str.c_str(), valve_str.length());
