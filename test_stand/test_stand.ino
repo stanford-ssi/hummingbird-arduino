@@ -44,8 +44,8 @@ const int analogSensorPin8 = 39;  // A15, used by PT1-P
 const int analogSensorPin9 = 38;  // A14, used by PT1-T
 */
 
-const int mbv1 = 25;           // LED pin (in place of actuator)
-const int mbv2 = 26;
+const int mbv1 = 26;           // LED pin (in place of actuator)
+const int mbv2 = 27;
 bool mbv1_state, mbv2_state = false;
 
 // Transmission timing variables
@@ -100,8 +100,9 @@ void setup() {
   pinMode(analogSensorPin6, INPUT);
   pinMode(analogSensorPin7, INPUT);
   pinMode(analogSensorPin8, INPUT);
-  pinMode(analogSensorPin9, INPUT);
-  pinMode(ledPin, OUTPUT);*/
+  pinMode(analogSensorPin9, INPUT);*/
+  pinMode(mbv1, OUTPUT);
+  pinMode(mbv2, OUTPUT);
 
   // Initialize the HX711 Sensor
   //init_hx711();
@@ -190,8 +191,11 @@ void loop() {
         mbv2_state = true;
         Serial.println("Solenoid 2 set to ON");
       } else if (received.equalsIgnoreCase("2 ON")) {
-        mbv2_state = false;
+        mbv2_state = true;
         Serial.println("Solenoid 2 set to ON");
+      } else if (received.equalsIgnoreCase("2 OFF")) {
+        mbv2_state = false;
+        Serial.println("Solenoid 2 set to OFF");
       } else {
         Serial.println("Unrecognized command.");
       }

@@ -18,7 +18,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // File object for SD card logging
 File dataFile;
-#define FILENAME "data-T2-040425.txt"
+#define FILENAME "data-041325.txt"
 
 void setup() {
   Serial.begin(9600);
@@ -26,11 +26,11 @@ void setup() {
   Serial.println("Ground Station starting...");
 
   // Initialize the built-in SD card
-  /*if (!SD.begin(BUILTIN_SDCARD)) {
+  if (!SD.begin(BUILTIN_SDCARD)) {
     Serial.println("SD Card initialization failed!");
   } else {
     Serial.println("SD Card initialized.");
-  }*/
+  }
 
   // Set pins for, and reset, radio module
   pinMode(RFM95_RST, OUTPUT);
@@ -54,8 +54,7 @@ void setup() {
 
   // create SD header
   dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
-  dataFile.println("Hydrostatic Testing Test Result");
-  dataFile.println("*************************");
+  dataFile.println("MBV Test Result");
   dataFile.println("Time (ms),PT1,Solenoid 1,Solenoid 2");
   dataFile.close();
 
