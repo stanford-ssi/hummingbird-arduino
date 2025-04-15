@@ -25,10 +25,6 @@ TX: Collects data from sensors and transmits them to the ground station
 #define RF95_FREQ 915.0
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
-// MCP9600 object for thermocouple sensor
-Adafruit_MCP9600 mcp;
-Adafruit_MCP9600 TT1O, TT1P, TT1T, TT2T, TT3T;
-
 // Sensor and actuator pins
 const int analogSensorPin1 = 23;  // Analog sensor on Teensy 4.1 A9 (in place of PT), used by PT1-I
 const int analogSensorPin2 = 22;  // A8, used by PT2-I
@@ -51,8 +47,15 @@ const unsigned long sensorInterval = 1000; // Transmit every 1 second
 const uint8_t DATA_PIN = 2;
 const uint8_t CLOCK_PIN = 3;
 
+// Pins for MCP9600 Communication
+const uint8_t SCL_PIN = 19;
+const uint8_t SDA_PIN = 18;
+
 // HX711 Object for load cell sensor
 Adafruit_HX711 hx711(DATA_PIN, CLOCK_PIN);
+
+// MCP9600 object for thermocouple sensor
+Adafruit_MCP9600 TT1O, TT1P, TT1T, TT2T, TT3T;
 
 void init_hx711(){
   hx711.begin();
@@ -85,27 +88,27 @@ void setup() {
   Serial.println("Test Stand starting...");
 
   // Initalize sensor and actuator pins
-  pinMode(analogSensorPin1, INPUT);
-  pinMode(analogSensorPin2, INPUT);
-  pinMode(analogSensorPin3, INPUT);
-  pinMode(analogSensorPin4, INPUT);
-  pinMode(analogSensorPin5, INPUT);
-  pinMode(analogSensorPin6, INPUT);
-  pinMode(analogSensorPin7, INPUT);
-  pinMode(analogSensorPin8, INPUT);
-  pinMode(analogSensorPin9, INPUT);
+  pinMode(analogSensorPin1, INPUT_PULLUP);
+  pinMode(analogSensorPin2, INPUT_PULLUP);
+  pinMode(analogSensorPin3, INPUT_PULLUP);
+  pinMode(analogSensorPin4, INPUT_PULLUP);
+  pinMode(analogSensorPin5, INPUT_PULLUP);
+  pinMode(analogSensorPin6, INPUT_PULLUP);
+  pinMode(analogSensorPin7, INPUT_PULLUP);
+  pinMode(analogSensorPin8, INPUT_PULLUP);
+  pinMode(analogSensorPin9, INPUT_PULLUP);
   pinMode(ledPin, OUTPUT);
 
   // Initialize the HX711 Sensor
   //init_hx711();
 
   // Initialize the MCP9600 sensor
-  /*Wire.begin(); // Initalize I2C
-  if (!mcp.begin()) {
-    Serial.println("MCP9600 not found. Check wiring!");
-    while (1);
-  }
-  mcp.setThermocoupleType(MCP9600_TYPE_K);  // Set thermocouple type (K-type)
+  Wire.begin(); // Initalize I2C
+  // if (!mcp.begin()) {
+  //   Serial.println("MCP9600 not found. Check wiring!");
+  //   while (1);
+  // }
+  // mcp.setThermocoupleType(MCP9600_TYPE_K);  // Set thermocouple type (K-type)
 
   // Initialize the five different Thermocouple Amplifier
   if (!TT1O.begin(I2C_ADDRESS_TT1O)) {
@@ -134,7 +137,7 @@ void setup() {
   TT1T.setThermocoupleType(MCP9600_TYPE_K);
   TT2T.setThermocoupleType(MCP9600_TYPE_K);
   TT3T.setThermocoupleType(MCP9600_TYPE_K);  
-  */
+
   // Set pins for, and reset, radio module
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -144,16 +147,18 @@ void setup() {
   delay(10);
 
   // Initialize radio module
-  if (!rf95.init()){
-    Serial.println("Radio init failed!");
-    while (1);
-  }
-  if (!rf95.setFrequency(RF95_FREQ)){
-    Serial.println("setFrequency failed!");
-    while (1);
-  }
-  rf95.setTxPower(23, false);
-  Serial.println("Radio init succeeded.");
+  // if (!rf95.init()){
+  //   Serial.println("Radio init failed!");
+  //   while (1);
+  // }
+  // if (!rf95.setFrequency(RF95_FREQ)){
+  //   Serial.println("setFrequency failed!");
+  //   while (1);
+  // }
+  // rf95.setTxPower(23, false);
+  // Serial.println("Radio init succeeded.");
+
+  Serial.println("Setup successful!");
 }
 
 void loop() {
@@ -195,15 +200,15 @@ void loop() {
     lastSensorTransmit = currentMillis;
     
     // Read sensor values
-    int pt1_val = analogRead(analogSensorPin1);      // PT1-I
-    int pt2_val = analogRead(analogSensorPin2);      // PT2-I
-    int pt3_val = analogRead(analogSensorPin3);      // PT3-I
-    int pt4_val = analogRead(analogSensorPin4);      // PT4-I
-    int pt5_val = analogRead(analogSensorPin5);      // PT5-I
-    int pt1N_val = analogRead(analogSensorPin6);     // PT1-N
-    int pt1O_val = analogRead(analogSensorPin7);     // PT1-O
-    int pt1P_val = analogRead(analogSensorPin8);     // PT1-P
-    int pt1T_val = analogRead(analogSensorPin9);     // PT1-T
+    // int pt1_val = analogRead(analogSensorPin1);      // PT1-I
+    // int pt2_val = analogRead(analogSensorPin2);      // PT2-I
+    // int pt3_val = analogRead(analogSensorPin3);      // PT3-I
+    // int pt4_val = analogRead(analogSensorPin4);      // PT4-I
+    // int pt5_val = analogRead(analogSensorPin5);      // PT5-I
+    // int pt1N_val = analogRead(analogSensorPin6);     // PT1-N
+    // int pt1O_val = analogRead(analogSensorPin7);     // PT1-O
+    // int pt1P_val = analogRead(analogSensorPin8);     // PT1-P
+    // int pt1T_val = analogRead(analogSensorPin9);     // PT1-T
     // float thermocoupleTemp = mcp.readThermocouple();    // Thermocouple
     float TT1O_temp = TT1O.readThermocouple();       // TT1-O
     float TT1P_temp = TT1P.readThermocouple();       // TT1-P
@@ -214,15 +219,15 @@ void loop() {
     // Build a sensor data string that includes a timestamp (in milliseconds)
     // Format: "TIME:<timestamp>,PT:<value>,TT:<temperature>"
     String sensorStr = String(currentMillis) +
-                       ", " + String(pt1_val) +
-                       ", " + String(pt2_val) +
-                       ", " + String(pt3_val) +
-                       ", " + String(pt4_val) +
-                       ", " + String(pt5_val) +
-                       ", " + String(pt1N_val) +
-                       ", " + String(pt1O_val) +
-                       ", " + String(pt1P_val) +
-                       ", " + String(pt1T_val); // +
+                      //  ", " + String(pt1_val) +
+                      //  ", " + String(pt2_val) +
+                      //  ", " + String(pt3_val) +
+                      //  ", " + String(pt4_val) +
+                      //  ", " + String(pt5_val) +
+                      //  ", " + String(pt1N_val) +
+                      //  ", " + String(pt1O_val) +
+                      //  ", " + String(pt1P_val) +
+                      //  ", " + String(pt1T_val); // +
                        // ", " + String(thermocoupleTemp, 2);
                        ", " + String(TT1O_temp, 2);
                        ", " + String(TT1P_temp, 2);

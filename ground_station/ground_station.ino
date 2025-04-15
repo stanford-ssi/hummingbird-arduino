@@ -54,9 +54,11 @@ void setup() {
 
   // create SD header
   dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
-  dataFile.println("Hydrostatic Testing Test Result");
+  dataFile.println("Temperature Amplifier Test Result");
   dataFile.println("*************************");
-  dataFile.println("Time (ms), PT1-I (psi), PT2-I (psi), PT3-I (psi), PT4-I (psi), PT5-I (psi), PT1-N (psi), PT1-O (psi), PT1-P (psi), PT1-T (psi)");
+  // dataFile.println("Time (ms), PT1-I (psi), PT2-I (psi), PT3-I (psi), PT4-I (psi), PT5-I (psi), PT1-N (psi), PT1-O (psi), PT1-P (psi), PT1-T (psi), 
+  //                   TT1-O (C), TT1-P (C), TT1-T (C), TT2-T (C), TT3-T (C)");
+  dataFile.println("Time (ms), TT1-O (C), TT1-P (C), TT1-T (C), TT2-T (C), TT3-T (C)");
   dataFile.close();
 
 }
