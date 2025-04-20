@@ -222,8 +222,7 @@ void loop() {
                        ", " + String(pt1N_val) +
                        ", " + String(pt1O_val) +
                        ", " + String(pt1P_val) +
-                       ", " + String(pt1T_val); // +
-                       // ", " + String(thermocoupleTemp, 2);
+                       ", " + String(pt1T_val) +
                        ", " + String(TT1O_temp, 2) +
                        ", " + String(TT1P_temp, 2) +
                        ", " + String(TT1T_temp, 2) +
