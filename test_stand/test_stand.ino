@@ -100,13 +100,13 @@ void setup() {
   //init_hx711();
 
   // Initialize the MCP9600 sensor
-  /*Wire.begin(); // Initalize I2C
-  if (!mcp.begin()) {
+  Wire.begin(); // Initalize I2C
+  /*if (!mcp.begin()) {
     Serial.println("MCP9600 not found. Check wiring!");
     while (1);
   }
   mcp.setThermocoupleType(MCP9600_TYPE_K);  // Set thermocouple type (K-type)
-
+  */
   // Initialize the five different Thermocouple Amplifier
   if (!TT1O.begin(I2C_ADDRESS_TT1O)) {
     Serial.println("TT1-O not found. Check wiring!");
@@ -134,7 +134,7 @@ void setup() {
   TT1T.setThermocoupleType(MCP9600_TYPE_K);
   TT2T.setThermocoupleType(MCP9600_TYPE_K);
   TT3T.setThermocoupleType(MCP9600_TYPE_K);  
-  */
+  
   // Set pins for, and reset, radio module
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -224,10 +224,10 @@ void loop() {
                        ", " + String(pt1P_val) +
                        ", " + String(pt1T_val); // +
                        // ", " + String(thermocoupleTemp, 2);
-                       ", " + String(TT1O_temp, 2);
-                       ", " + String(TT1P_temp, 2);
-                       ", " + String(TT1T_temp, 2);
-                       ", " + String(TT2T_temp, 2);
+                       ", " + String(TT1O_temp, 2) +
+                       ", " + String(TT1P_temp, 2) +
+                       ", " + String(TT1T_temp, 2) +
+                       ", " + String(TT2T_temp, 2) +
                        ", " + String(TT3T_temp, 2);
 
     Serial.print("Sending sensor reading: ");
