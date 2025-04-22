@@ -43,6 +43,30 @@ const int analogSensorPin9 = 38;  // A14, used by PT1-T
 const int ledPin = 33;           // LED pin (in place of actuator)
 bool ledState = false;
 
+// Power Valves Pins and States
+
+const int PV1N_Pin = 3;
+const int PV1P_Pin = 4;
+const int PV1T_Pin = 5;
+const int BV1O_Pin = 6;
+const int BV1T_Pin = 7;
+const int BV1P_Pin = 8;
+const int PV1O_1_Pin = 24;
+const int PV1O_2_Pin = 25;
+const int MBV1I_1_Pin = 26;
+const int MBV1I_2_Pin = 27;
+
+bool PV1N_State = false;
+bool PV1P_State = false;
+bool PV1T_State = false;
+bool BV1O_State = false;
+bool BV1T_State = false;
+bool BV1P_State = false;
+bool PV1O_1_State = false;
+bool PV1O_2_State = false;
+bool MBV1I_1_State = false;
+bool MBV1I_2_State = false;
+
 // Transmission timing variables
 unsigned long lastSensorTransmit = 0;
 const unsigned long sensorInterval = 1000; // Transmit every 1 second
@@ -172,8 +196,9 @@ void loop() {
       Serial.print("Received command: ");
       Serial.println(received);
       
+      /*
       // Evaluate the command
-      if (received.equalsIgnoreCase("ON")) {
+      if (received.equalsIgnoreCase(" ON")) {
         ledState = true;
         Serial.println("LED set to ON");
       } else if (received.equalsIgnoreCase("OFF")) {
@@ -182,12 +207,83 @@ void loop() {
       } else {
         Serial.println("Unrecognized command.");
       }
+      */
 
+      if (received.endsWith(" ON")) {
+        String name = received.substring(0, received.length() - 3); // Extract name before " ON"
+        
+        if (name.equalsIgnoreCase("PV1N")) {
+          PV1N_State = true;
+        } else if (name.equalsIgnoreCase("PV1P")) {
+          PV1P_State = true;
+        } else if (name.equalsIgnoreCase("PV1T")) {
+          PV1T_State = true;
+        } else if (name.equalsIgnoreCase("BV1O")) {
+          BV1O_State = true;
+        } else if (name.equalsIgnoreCase("BV1T")) {
+          BV1T_State = true;
+        } else if (name.equalsIgnoreCase("BV1P")) {
+          BV1P_State = true;
+        } else if (name.equalsIgnoreCase("PV1O_1")) {
+          PV1O_1_State = true;
+        } else if (name.equalsIgnoreCase("PV1O_2")) {
+          PV1O_2_State = true;
+        } else if (name.equalsIgnoreCase("MBV1I_1")) {
+          MBV1I_1_State = true;
+        } else if (name.equalsIgnoreCase("MBV1I_2")) {
+          MBV1I_2_State = true;
+        } else {
+          Serial.println("Unknown Power Valve name.");
+        }
     }
+
+
+      else if (received.endsWith(" OFF")) {
+        String name = received.substring(0, received.length() - 3); // Extract name before " OFF"
+        
+        if (name.equalsIgnoreCase("PV1N")) {
+          PV1N_State = false;
+        } else if (name.equalsIgnoreCase("PV1P")) {
+          PV1P_State = false;
+        } else if (name.equalsIgnoreCase("PV1T")) {
+          PV1T_State = false;
+        } else if (name.equalsIgnoreCase("BV1O")) {
+          BV1O_State = false;
+        } else if (name.equalsIgnoreCase("BV1T")) {
+          BV1T_State = false;
+        } else if (name.equalsIgnoreCase("BV1P")) {
+          BV1P_State = false;
+        } else if (name.equalsIgnoreCase("PV1O_1")) {
+          PV1O_1_State = false;
+        } else if (name.equalsIgnoreCase("PV1O_2")) {
+          PV1O_2_State = false;
+        } else if (name.equalsIgnoreCase("MBV1I_1")) {
+          MBV1I_1_State = false;
+        } else if (name.equalsIgnoreCase("MBV1I_2")) {
+          MBV1I_2_State = false;
+        } else {
+          Serial.println("Unknown Power Valve name.");
+        }
+      }
+
+      else {
+         Serial.println("Unrecognized command.");       
+      }
+
   }
   
   // Update actuator state according to command
-  digitalWrite(ledPin, ledState ? HIGH : LOW);
+  digitalWrite(PV1N_Pin, PV1N_State ? HIGH : LOW);
+  digitalWrite(PV1P_Pin, PV1P_State ? HIGH : LOW);
+  digitalWrite(PV1T_Pin, PV1T_State ? HIGH : LOW);
+  digitalWrite(BV1O_Pin, BV1O_State ? HIGH : LOW);
+  digitalWrite(BV1T_Pin, BV1T_State ? HIGH : LOW);
+  digitalWrite(BV1P_Pin, BV1P_State ? HIGH : LOW);
+  digitalWrite(PV10_1_Pin, PV10_1_State ? HIGH : LOW);
+  digitalWrite(PV10_2_Pin, PV10_2_State ? HIGH : LOW);
+  digitalWrite(MBV1I_1_Pin, MBV1I_1_State ? HIGH : LOW);
+  digitalWrite(MBV1I_2_Pin, MBV1I_2_State ? HIGH : LOW);
+
   
   // TX: Transmit sensor data every "sensorInterval" milliseconds
   unsigned long currentMillis = millis();
