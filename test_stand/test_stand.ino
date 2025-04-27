@@ -10,9 +10,23 @@ TX: Collects data from sensors and transmits them to the ground station
 #include <Adafruit_MCP9600.h>
 #include "Adafruit_HX711.h"
 
-#define RFM95_CS   10     // CS pin for radio module
-#define RFM95_RST  1      // RST pin for radio module
-#define RFM95_INT  0      // G0 (Interupt) for radio module
+// ========================================================================== //
+//                                RADIO MODULE                                //
+// ========================================================================== //
+
+#define RFM95_CS   10               // CS pin
+#define RFM95_RST  1                // RST pin
+#define RFM95_INT  0                // G0 (Interupt)
+#define RF95_FREQ 915.0             // Sets frequency
+RH_RF95 rf95(RFM95_CS, RFM95_INT);  // RH_RF95 object
+
+// Transmission timing variables
+unsigned long lastSensorTransmit = 0;
+const unsigned long sensorInterval = 1000; // Transmit every 1 second
+
+// ========================================================================== //
+//                             TEMPERATURE TRANSDUCER                         //
+// ========================================================================== //
 
 //  I2C Addresses for different thermocouple amplifiers
 #define I2C_ADDRESS_TT1O (0x67)
@@ -20,60 +34,16 @@ TX: Collects data from sensors and transmits them to the ground station
 #define I2C_ADDRESS_TT1T (0x65)
 #define I2C_ADDRESS_TT2T (0x64)
 #define I2C_ADDRESS_TT3T (0x60)
-
-// RH_RF95 object for radio module
-#define RF95_FREQ 915.0
-RH_RF95 rf95(RFM95_CS, RFM95_INT);
-
 // MCP9600 object for thermocouple sensor
-Adafruit_MCP9600 mcp;
 Adafruit_MCP9600 TT1O, TT1P, TT1T, TT2T, TT3T;
 
-// Sensor and actuator pins
-const int analogSensorPin1 = 23;  // Analog sensor on Teensy 4.1 A9 (in place of PT), used by PT1-I
-const int analogSensorPin2 = 22;  // A8, used by PT2-I
-const int analogSensorPin3 = 21;  // A7, used by PT3-I
-const int analogSensorPin4 = 16;  // A6, used by PT4-I
-const int analogSensorPin5 = 15;  // A5, used by PT5-I
-const int analogSensorPin6 = 41;  // A17, used by PT1-N
-const int analogSensorPin7 = 40;  // A16, used by PT1-O
-const int analogSensorPin8 = 39;  // A15, used by PT1-P
-const int analogSensorPin9 = 38;  // A14, used by PT1-T
-
-const int ledPin = 33;           // LED pin (in place of actuator)
-bool ledState = false;
-
-// Power Valves Pins and States
-
-const int PV1N_Pin = 3;
-const int PV1P_Pin = 4;
-const int PV1T_Pin = 5;
-const int BV1O_Pin = 6;
-const int BV1T_Pin = 7;
-const int BV1P_Pin = 8;
-const int PV1O_1_Pin = 24;
-const int PV1O_2_Pin = 25;
-const int MBV1I_1_Pin = 26;
-const int MBV1I_2_Pin = 27;
-
-bool PV1N_State = false;
-bool PV1P_State = false;
-bool PV1T_State = false;
-bool BV1O_State = false;
-bool BV1T_State = false;
-bool BV1P_State = false;
-bool PV1O_1_State = false;
-bool PV1O_2_State = false;
-bool MBV1I_1_State = false;
-bool MBV1I_2_State = false;
-
-// Transmission timing variables
-unsigned long lastSensorTransmit = 0;
-const unsigned long sensorInterval = 1000; // Transmit every 1 second
+// ========================================================================== //
+//                                 LOAD CELL                                  //
+// ========================================================================== //
 
 // Pins for HX711 Communication
-const uint8_t DATA_PIN = 2;
-const uint8_t CLOCK_PIN = 3;
+#define DATA_PIN = 2;
+#define CLOCK_PIN = 3;
 
 // HX711 Object for load cell sensor
 Adafruit_HX711 hx711(DATA_PIN, CLOCK_PIN);
@@ -103,34 +73,138 @@ void hx711_loop(){
   Serial.println(weightB32);
 }
 
+// ========================================================================== //
+//                           PRESSURE TRANSDUCER                              //
+// ========================================================================== //
+
+#define PT1I_PIN 23  // A9
+#define PT2I_PIN 22  // A8
+#define PT3I_PIN 21  // A7
+#define PT4I_PIN 16  // A6
+#define PT5I_PIN 15  // A5
+#define PT1N_PIN 41  // A17
+#define PT1O_PIN 40  // A16
+#define PT1P_PIN 39  // A15
+#define PT1T_PIN 38  // A14
+
+// ========================================================================== //
+//                                POWERED VALVES                              //
+// ========================================================================== //
+
+#define PV1N_PIN       3
+#define PV1P_PIN       4
+#define PV1T_PIN       5
+#define BV1O_PIN       6
+#define BV1T_PIN       7
+#define BV1P_PIN       8
+#define PV1O_1_PIN    24
+#define PV1O_2_PIN    25
+#define MBV1I_1_PIN   26
+#define MBV1I_2_PIN   27
+
+// State global variables
+bool PV1N_State = false;
+bool PV1P_State = false;
+bool PV1T_State = false;
+bool BV1O_State = false;
+bool BV1T_State = false;
+bool BV1P_State = false;
+bool PV1O_1_State = false;
+bool PV1O_2_State = false;
+bool MBV1I_1_State = false;
+bool MBV1I_2_State = false;
+
+// Takes in a received string and toggles states accordingly
+void eval_cmd(){
+  if (received.endsWith(" ON")) {
+  String name = received.substring(0, received.length() - 3); // Extract name before " ON"
+  if (name.equalsIgnoreCase("PV1N")) {
+    PV1N_State = true;
+  } else if (name.equalsIgnoreCase("PV1P")) {
+    PV1P_State = true;
+  } else if (name.equalsIgnoreCase("PV1T")) {
+    PV1T_State = true;
+  } else if (name.equalsIgnoreCase("BV1O")) {
+    BV1O_State = true;
+  } else if (name.equalsIgnoreCase("BV1T")) {
+    BV1T_State = true;
+  } else if (name.equalsIgnoreCase("BV1P")) {
+    BV1P_State = true;
+  } else if (name.equalsIgnoreCase("PV1O_1")) {
+    PV1O_1_State = true;
+  } else if (name.equalsIgnoreCase("PV1O_2")) {
+    PV1O_2_State = true;
+  } else if (name.equalsIgnoreCase("MBV1I_1")) {
+    MBV1I_1_State = true;
+  } else if (name.equalsIgnoreCase("MBV1I_2")) {
+    MBV1I_2_State = true;
+  } else {
+    Serial.println("Unknown Power Valve name.");
+  }
+  else if (received.endsWith(" OFF")) {
+    String name = received.substring(0, received.length() - 4); // Extract name before " OFF"
+    if (name.equalsIgnoreCase("PV1N")) {
+      PV1N_State = false;
+    } else if (name.equalsIgnoreCase("PV1P")) {
+      PV1P_State = false;
+    } else if (name.equalsIgnoreCase("PV1T")) {
+      PV1T_State = false;
+    } else if (name.equalsIgnoreCase("BV1O")) {
+      BV1O_State = false;
+    } else if (name.equalsIgnoreCase("BV1T")) {
+      BV1T_State = false;
+    } else if (name.equalsIgnoreCase("BV1P")) {
+      BV1P_State = false;
+    } else if (name.equalsIgnoreCase("PV1O_1")) {
+      PV1O_1_State = false;
+    } else if (name.equalsIgnoreCase("PV1O_2")) {
+      PV1O_2_State = false;
+    } else if (name.equalsIgnoreCase("MBV1I_1")) {
+      MBV1I_1_State = false;
+    } else if (name.equalsIgnoreCase("MBV1I_2")) {
+      MBV1I_2_State = false;
+    } else {
+      Serial.println("Unknown Power Valve name.");
+    }
+  }
+  else {
+      Serial.println("Unrecognized command.");       
+  }
+}
+
+// ========================================================================== //
+//                               SETUP FUNCTION                               //
+// ========================================================================== //
+
 void setup() {
+  // SERIAL MONITOR
   Serial.begin(9600);
-  while (!Serial && millis() < 5000);  // Wait up to 5 seconds for Serial
+  while (!Serial && millis() < 5000); // wait up to five seconds
   Serial.println("Test Stand starting...");
 
-  // Initalize sensor and actuator pins
-  pinMode(analogSensorPin1, INPUT);
-  pinMode(analogSensorPin2, INPUT);
-  pinMode(analogSensorPin3, INPUT);
-  pinMode(analogSensorPin4, INPUT);
-  pinMode(analogSensorPin5, INPUT);
-  pinMode(analogSensorPin6, INPUT);
-  pinMode(analogSensorPin7, INPUT);
-  pinMode(analogSensorPin8, INPUT);
-  pinMode(analogSensorPin9, INPUT);
-  pinMode(ledPin, OUTPUT);
+  // RADIO MODULE
+  // Set pins for, and reset, radio module
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
 
-  // Initialize the HX711 Sensor
-  //init_hx711();
-
-  // Initialize the MCP9600 sensor
-  Wire.begin(); // Initalize I2C
-  /*if (!mcp.begin()) {
-    Serial.println("MCP9600 not found. Check wiring!");
+  // Initialize radio module
+  if (!rf95.init()){
+    Serial.println("Radio init failed!");
     while (1);
   }
-  mcp.setThermocoupleType(MCP9600_TYPE_K);  // Set thermocouple type (K-type)
-  */
+  if (!rf95.setFrequency(RF95_FREQ)){
+    Serial.println("setFrequency failed!");
+    while (1);
+  }
+  rf95.setTxPower(23, false);
+  Serial.println("Radio init succeeded.");
+
+  // TEMPERATURE TRANSDUCER
+  Wire.begin(); // Initalize I2C
   // Initialize the five different Thermocouple Amplifier
   if (!TT1O.begin(I2C_ADDRESS_TT1O)) {
     Serial.println("TT1-O not found. Check wiring!");
@@ -152,36 +226,34 @@ void setup() {
     Serial.println("TT3-T not found. Check wiring!");
     while (1);
   }
-
-  TT1O.setThermocoupleType(MCP9600_TYPE_K);  // Set thermocouple type (K-type)
+  // Set thermocouple type (K-type)
+  TT1O.setThermocoupleType(MCP9600_TYPE_K);
   TT1P.setThermocoupleType(MCP9600_TYPE_K);
   TT1T.setThermocoupleType(MCP9600_TYPE_K);
   TT2T.setThermocoupleType(MCP9600_TYPE_K);
-  TT3T.setThermocoupleType(MCP9600_TYPE_K);  
-  
-  // Set pins for, and reset, radio module
-  pinMode(RFM95_RST, OUTPUT);
-  digitalWrite(RFM95_RST, HIGH);
-  digitalWrite(RFM95_RST, LOW);
-  delay(10);
-  digitalWrite(RFM95_RST, HIGH);
-  delay(10);
+  TT3T.setThermocoupleType(MCP9600_TYPE_K);
 
-  // Initialize radio module
-  if (!rf95.init()){
-    Serial.println("Radio init failed!");
-    while (1);
-  }
-  if (!rf95.setFrequency(RF95_FREQ)){
-    Serial.println("setFrequency failed!");
-    while (1);
-  }
-  rf95.setTxPower(23, false);
-  Serial.println("Radio init succeeded.");
+  // LOAD CELL
+  init_hx711(); 
+
+  // PRESSURE TRANSDUCER
+  pinMode(PT1I_PIN, INPUT);
+  pinMode(PT2I_PIN, INPUT);
+  pinMode(PT3I_PIN, INPUT);
+  pinMode(PT4I_PIN, INPUT);
+  pinMode(PT5I_PIN, INPUT);
+  pinMode(PT1N_PIN, INPUT);
+  pinMode(PT1O_PIN, INPUT);
+  pinMode(PT1P_PIN, INPUT);
+  pinMode(PT1T_PIN, INPUT); 
 }
 
+// ========================================================================== //
+//                                LOOP FUNCTION                               //
+// ========================================================================== //
+
 void loop() {
-  // RX: Check for incoming radio commands (non-blocking)
+  // ----------------- RX: Receive incoming radio commands ---------------- //
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
@@ -195,112 +267,41 @@ void loop() {
       received.trim();
       Serial.print("Received command: ");
       Serial.println(received);
-      
-      /*
-      // Evaluate the command
-      if (received.equalsIgnoreCase(" ON")) {
-        ledState = true;
-        Serial.println("LED set to ON");
-      } else if (received.equalsIgnoreCase("OFF")) {
-        ledState = false;
-        Serial.println("LED set to OFF");
-      } else {
-        Serial.println("Unrecognized command.");
-      }
-      */
 
-      if (received.endsWith(" ON")) {
-        String name = received.substring(0, received.length() - 3); // Extract name before " ON"
-        
-        if (name.equalsIgnoreCase("PV1N")) {
-          PV1N_State = true;
-        } else if (name.equalsIgnoreCase("PV1P")) {
-          PV1P_State = true;
-        } else if (name.equalsIgnoreCase("PV1T")) {
-          PV1T_State = true;
-        } else if (name.equalsIgnoreCase("BV1O")) {
-          BV1O_State = true;
-        } else if (name.equalsIgnoreCase("BV1T")) {
-          BV1T_State = true;
-        } else if (name.equalsIgnoreCase("BV1P")) {
-          BV1P_State = true;
-        } else if (name.equalsIgnoreCase("PV1O_1")) {
-          PV1O_1_State = true;
-        } else if (name.equalsIgnoreCase("PV1O_2")) {
-          PV1O_2_State = true;
-        } else if (name.equalsIgnoreCase("MBV1I_1")) {
-          MBV1I_1_State = true;
-        } else if (name.equalsIgnoreCase("MBV1I_2")) {
-          MBV1I_2_State = true;
-        } else {
-          Serial.println("Unknown Power Valve name.");
-        }
-    }
-
-
-      else if (received.endsWith(" OFF")) {
-        String name = received.substring(0, received.length() - 3); // Extract name before " OFF"
-        
-        if (name.equalsIgnoreCase("PV1N")) {
-          PV1N_State = false;
-        } else if (name.equalsIgnoreCase("PV1P")) {
-          PV1P_State = false;
-        } else if (name.equalsIgnoreCase("PV1T")) {
-          PV1T_State = false;
-        } else if (name.equalsIgnoreCase("BV1O")) {
-          BV1O_State = false;
-        } else if (name.equalsIgnoreCase("BV1T")) {
-          BV1T_State = false;
-        } else if (name.equalsIgnoreCase("BV1P")) {
-          BV1P_State = false;
-        } else if (name.equalsIgnoreCase("PV1O_1")) {
-          PV1O_1_State = false;
-        } else if (name.equalsIgnoreCase("PV1O_2")) {
-          PV1O_2_State = false;
-        } else if (name.equalsIgnoreCase("MBV1I_1")) {
-          MBV1I_1_State = false;
-        } else if (name.equalsIgnoreCase("MBV1I_2")) {
-          MBV1I_2_State = false;
-        } else {
-          Serial.println("Unknown Power Valve name.");
-        }
-      }
-
-      else {
-         Serial.println("Unrecognized command.");       
-      }
+      eval_cmd(received)
 
   }
   
   // Update actuator state according to command
-  digitalWrite(PV1N_Pin, PV1N_State ? HIGH : LOW);
-  digitalWrite(PV1P_Pin, PV1P_State ? HIGH : LOW);
-  digitalWrite(PV1T_Pin, PV1T_State ? HIGH : LOW);
-  digitalWrite(BV1O_Pin, BV1O_State ? HIGH : LOW);
-  digitalWrite(BV1T_Pin, BV1T_State ? HIGH : LOW);
-  digitalWrite(BV1P_Pin, BV1P_State ? HIGH : LOW);
-  digitalWrite(PV10_1_Pin, PV10_1_State ? HIGH : LOW);
-  digitalWrite(PV10_2_Pin, PV10_2_State ? HIGH : LOW);
-  digitalWrite(MBV1I_1_Pin, MBV1I_1_State ? HIGH : LOW);
-  digitalWrite(MBV1I_2_Pin, MBV1I_2_State ? HIGH : LOW);
+  digitalWrite(PV1N_PIN, PV1N_State ? HIGH : LOW);
+  digitalWrite(PV1P_PIN, PV1P_State ? HIGH : LOW);
+  digitalWrite(PV1T_PIN, PV1T_State ? HIGH : LOW);
+  digitalWrite(BV1O_PIN, BV1O_State ? HIGH : LOW);
+  digitalWrite(BV1T_PIN, BV1T_State ? HIGH : LOW);
+  digitalWrite(BV1P_PIN, BV1P_State ? HIGH : LOW);
+  digitalWrite(PV10_1_PIN, PV10_1_State ? HIGH : LOW);
+  digitalWrite(PV10_2_PIN, PV10_2_State ? HIGH : LOW);
+  digitalWrite(MBV1I_1_PIN, MBV1I_1_State ? HIGH : LOW);
+  digitalWrite(MBV1I_2_PIN, MBV1I_2_State ? HIGH : LOW);
 
   
-  // TX: Transmit sensor data every "sensorInterval" milliseconds
+  // ------------------- TX: Transmit sensor data ----------------------- //
   unsigned long currentMillis = millis();
   if (currentMillis - lastSensorTransmit >= sensorInterval) {
     lastSensorTransmit = currentMillis;
     
-    // Read sensor values
-    int pt1_val = analogRead(analogSensorPin1);      // PT1-I
-    int pt2_val = analogRead(analogSensorPin2);      // PT2-I
-    int pt3_val = analogRead(analogSensorPin3);      // PT3-I
-    int pt4_val = analogRead(analogSensorPin4);      // PT4-I
-    int pt5_val = analogRead(analogSensorPin5);      // PT5-I
-    int pt1N_val = analogRead(analogSensorPin6);     // PT1-N
-    int pt1O_val = analogRead(analogSensorPin7);     // PT1-O
-    int pt1P_val = analogRead(analogSensorPin8);     // PT1-P
-    int pt1T_val = analogRead(analogSensorPin9);     // PT1-T
-    // float thermocoupleTemp = mcp.readThermocouple();    // Thermocouple
+    // Read PT values
+    int pt1i_val = analogRead(PT1I_PIN);      // PT1-I
+    int pt2i_val = analogRead(PT2I_PIN);      // PT2-I
+    int pt3i_val = analogRead(PT3I_PIN);      // PT3-I
+    int pt4i_val = analogRead(PT4I_PIN);      // PT4-I
+    int pt5i_val = analogRead(PT5I_PIN);      // PT5-I
+    int pt1n_val = analogRead(PT1N_PIN);     // PT1-N
+    int pt1o_val = analogRead(PT1O_PIN);     // PT1-O
+    int pt1p_val = analogRead(PT1P_PIN);     // PT1-P
+    int pt1t_val = analogRead(PT1T_PIN);     // PT1-T
+
+    // Read TT values
     float TT1O_temp = TT1O.readThermocouple();       // TT1-O
     float TT1P_temp = TT1P.readThermocouple();       // TT1-P
     float TT1T_temp = TT1T.readThermocouple();       // TT1-T
@@ -310,15 +311,15 @@ void loop() {
     // Build a sensor data string that includes a timestamp (in milliseconds)
     // Format: "TIME:<timestamp>,PT:<value>,TT:<temperature>"
     String sensorStr = String(currentMillis) +
-                       ", " + String(pt1_val) +
-                       ", " + String(pt2_val) +
-                       ", " + String(pt3_val) +
-                       ", " + String(pt4_val) +
-                       ", " + String(pt5_val) +
-                       ", " + String(pt1N_val) +
-                       ", " + String(pt1O_val) +
-                       ", " + String(pt1P_val) +
-                       ", " + String(pt1T_val) +
+                       ", " + String(pt1i_val) +
+                       ", " + String(pt2i_val) +
+                       ", " + String(pt3i_val) +
+                       ", " + String(pt4i_val) +
+                       ", " + String(pt5i_val) +
+                       ", " + String(pt1n_val) +
+                       ", " + String(pt1o_val) +
+                       ", " + String(pt1p_val) +
+                       ", " + String(pt1t_val) +
                        ", " + String(TT1O_temp, 2) +
                        ", " + String(TT1P_temp, 2) +
                        ", " + String(TT1T_temp, 2) +
