@@ -42,8 +42,8 @@ Adafruit_MCP9600 TT1O, TT1P, TT1T, TT2T, TT3T;
 // ========================================================================== //
 
 // Pins for HX711 Communication
-#define DATA_PIN = 2;
-#define CLOCK_PIN = 3;
+#define DATA_PIN 2
+#define CLOCK_PIN 3
 
 // ========================================================================== //
 //                           PRESSURE TRANSDUCER                              //
@@ -185,7 +185,7 @@ void init_pt() {
   pinMode(PT1T_PIN, INPUT); 
 }
 
-void radio_input_parsin() {
+void radio_input_parsing() {
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
@@ -219,80 +219,58 @@ void update_actuator_state() {
 }
 
 // Takes in a received string and toggles states accordingly
-void eval_cmd(){
+void eval_cmd(String received) {
   if (received.endsWith(" ON")) {
     String name = received.substring(0, received.length() - 3); // Extract name before " ON"
-    // switch statement to chek for valve name 
-    switch (name) {
-      case "PV1N":
-        PV1N_State = true;
-        break;
-      case "PV1P":
-        PV1P_State = true;
-        break;
-      case "PV1T":
-        PV1T_State = true;
-        break;
-      case "BV1O":
-        BV1O_State = true;
-        break;
-      case "BV1T":
-        BV1T_State = true;
-        break;
-      case "BV1P":
-        BV1P_State = true;
-        break;
-      case "PV1O_1":
-        PV1O_1_State = true;
-        break;
-      case "PV1O_2":
-        PV1O_2_State = true;
-        break;
-      case "MBV1I_1":
-        MBV1I_1_State = true;
-        break;
-      case "MBV1I_2":
-        MBV1I_2_State = true;
-        break;
-      default:
-        Serial.println("Unknown Power Valve name.");
+
+    if (name.equalsIgnoreCase("PV1N")) {
+      PV1N_State = true;
+    } else if (name.equalsIgnoreCase("PV1P")) {
+      PV1P_State = true;
+    } else if (name.equalsIgnoreCase("PV1T")) {
+      PV1T_State = true;
+    } else if (name.equalsIgnoreCase("BV1O")) {
+      BV1O_State = true;
+    } else if (name.equalsIgnoreCase("BV1T")) {
+      BV1T_State = true;
+    } else if (name.equalsIgnoreCase("BV1P")) {
+      BV1P_State = true;
+    } else if (name.equalsIgnoreCase("PV1O_1")) {
+      PV1O_1_State = true;
+    } else if (name.equalsIgnoreCase("PV1O_2")) {
+      PV1O_2_State = true;
+    } else if (name.equalsIgnoreCase("MBV1I_1")) {
+      MBV1I_1_State = true;
+    } else if (name.equalsIgnoreCase("MBV1I_2")) {
+      MBV1I_2_State = true;
+    } else {
+      Serial.println("Unknown Power Valve name.");
     }
   } else if (received.endsWith(" OFF")) {
     String name = received.substring(0, received.length() - 4); // Extract name before " OFF"
-    // switch statement to chek for valve name 
-    switch (name) {
-      case "PV1N":
-        PV1N_State = false;
-        break;
-      case "PV1P":
-        PV1P_State = false;
-        break;
-      case "PV1T":
-        PV1T_State = false;
-        break;
-      case "BV1O":
-        BV1O_State = false;
-        break;
-      case "BV1T":
-        BV1T_State = false;
-        break;
-      case "BV1P":
-        BV1P_State = false;
-        break;
-      case "PV1O_1":
-        PV1O_1_State = false;
-        break;
-      case "PV1O_2":
-        PV1O_2_State = false;
-        break;
-      case "MBV1I_1":
-        MBV1I_1_State = false;
-        break;
-      case "MBV1I_2":
-        MBV1I_2_State = false;
-        break;
-      default:
-        Serial.println("Unknown Power Valve name.");
+
+    if (name.equalsIgnoreCase("PV1N")) {
+      PV1N_State = false;
+    } else if (name.equalsIgnoreCase("PV1P")) {
+      PV1P_State = false;
+    } else if (name.equalsIgnoreCase("PV1T")) {
+      PV1T_State = false;
+    } else if (name.equalsIgnoreCase("BV1O")) {
+      BV1O_State = false;
+    } else if (name.equalsIgnoreCase("BV1T")) {
+      BV1T_State = false;
+    } else if (name.equalsIgnoreCase("BV1P")) {
+      BV1P_State = false;
+    } else if (name.equalsIgnoreCase("PV1O_1")) {
+      PV1O_1_State = false;
+    } else if (name.equalsIgnoreCase("PV1O_2")) {
+      PV1O_2_State = false;
+    } else if (name.equalsIgnoreCase("MBV1I_1")) {
+      MBV1I_1_State = false;
+    } else if (name.equalsIgnoreCase("MBV1I_2")) {
+      MBV1I_2_State = false;
+    } else {
+      Serial.println("Unknown Power Valve name.");
     }
   } else {
     Serial.println("Unrecognized command.");
