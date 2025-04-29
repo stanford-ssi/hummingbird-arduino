@@ -45,34 +45,6 @@ Adafruit_MCP9600 TT1O, TT1P, TT1T, TT2T, TT3T;
 #define DATA_PIN = 2;
 #define CLOCK_PIN = 3;
 
-// HX711 Object for load cell sensor
-Adafruit_HX711 hx711(DATA_PIN, CLOCK_PIN);
-
-void init_hx711(){
-  hx711.begin();
-  Serial.println("Tareing...");
-
-  for (uint8_t t=0; t<3; t++) {
-    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_128));
-    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_128));
-    hx711.tareB(hx711.readChannelRaw(CHAN_B_GAIN_32));
-    hx711.tareB(hx711.readChannelRaw(CHAN_B_GAIN_32));
-  }
-}
-
-void hx711_loop(){
-  // Read from Channel A with Gain 128, can also try CHAN_A_GAIN_64 or CHAN_B_GAIN_32
-  // since the read is blocking this will not be more than 10 or 80 SPS (L or H switch)
-  int32_t weightA128 = hx711.readChannelBlocking(CHAN_A_GAIN_128);
-  Serial.print("Channel A (Gain 128): ");
-  Serial.println(weightA128);
-
-  // Read from Channel A with Gain 128, can also try CHAN_A_GAIN_64 or CHAN_B_GAIN_32
-  int32_t weightB32 = hx711.readChannelBlocking(CHAN_B_GAIN_32);
-  Serial.print("Channel B (Gain 32): ");
-  Serial.println(weightB32);
-}
-
 // ========================================================================== //
 //                           PRESSURE TRANSDUCER                              //
 // ========================================================================== //
@@ -114,75 +86,40 @@ bool PV1O_2_State = false;
 bool MBV1I_1_State = false;
 bool MBV1I_2_State = false;
 
-// Takes in a received string and toggles states accordingly
-void eval_cmd(){
-  if (received.endsWith(" ON")) {
-  String name = received.substring(0, received.length() - 3); // Extract name before " ON"
-  if (name.equalsIgnoreCase("PV1N")) {
-    PV1N_State = true;
-  } else if (name.equalsIgnoreCase("PV1P")) {
-    PV1P_State = true;
-  } else if (name.equalsIgnoreCase("PV1T")) {
-    PV1T_State = true;
-  } else if (name.equalsIgnoreCase("BV1O")) {
-    BV1O_State = true;
-  } else if (name.equalsIgnoreCase("BV1T")) {
-    BV1T_State = true;
-  } else if (name.equalsIgnoreCase("BV1P")) {
-    BV1P_State = true;
-  } else if (name.equalsIgnoreCase("PV1O_1")) {
-    PV1O_1_State = true;
-  } else if (name.equalsIgnoreCase("PV1O_2")) {
-    PV1O_2_State = true;
-  } else if (name.equalsIgnoreCase("MBV1I_1")) {
-    MBV1I_1_State = true;
-  } else if (name.equalsIgnoreCase("MBV1I_2")) {
-    MBV1I_2_State = true;
-  } else {
-    Serial.println("Unknown Power Valve name.");
-  }
-  else if (received.endsWith(" OFF")) {
-    String name = received.substring(0, received.length() - 4); // Extract name before " OFF"
-    if (name.equalsIgnoreCase("PV1N")) {
-      PV1N_State = false;
-    } else if (name.equalsIgnoreCase("PV1P")) {
-      PV1P_State = false;
-    } else if (name.equalsIgnoreCase("PV1T")) {
-      PV1T_State = false;
-    } else if (name.equalsIgnoreCase("BV1O")) {
-      BV1O_State = false;
-    } else if (name.equalsIgnoreCase("BV1T")) {
-      BV1T_State = false;
-    } else if (name.equalsIgnoreCase("BV1P")) {
-      BV1P_State = false;
-    } else if (name.equalsIgnoreCase("PV1O_1")) {
-      PV1O_1_State = false;
-    } else if (name.equalsIgnoreCase("PV1O_2")) {
-      PV1O_2_State = false;
-    } else if (name.equalsIgnoreCase("MBV1I_1")) {
-      MBV1I_1_State = false;
-    } else if (name.equalsIgnoreCase("MBV1I_2")) {
-      MBV1I_2_State = false;
-    } else {
-      Serial.println("Unknown Power Valve name.");
-    }
-  }
-  else {
-      Serial.println("Unrecognized command.");       
+// ========================================================================== //
+//                          FUNCTION IMPLEMENTATIONS                          //
+// ========================================================================== //
+
+// HX711 Object for load cell sensor
+Adafruit_HX711 hx711(DATA_PIN, CLOCK_PIN);
+
+void init_hx711(){
+  hx711.begin();
+  Serial.println("Tareing...");
+
+  for (uint8_t t=0; t<3; t++) {
+    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_128));
+    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_128));
+    hx711.tareB(hx711.readChannelRaw(CHAN_B_GAIN_32));
+    hx711.tareB(hx711.readChannelRaw(CHAN_B_GAIN_32));
   }
 }
 
-// ========================================================================== //
-//                               SETUP FUNCTION                               //
-// ========================================================================== //
+void hx711_loop(){
+  // Read from Channel A with Gain 128, can also try CHAN_A_GAIN_64 or CHAN_B_GAIN_32
+  // since the read is blocking this will not be more than 10 or 80 SPS (L or H switch)
+  int32_t weightA128 = hx711.readChannelBlocking(CHAN_A_GAIN_128);
+  Serial.print("Channel A (Gain 128): ");
+  Serial.println(weightA128);
 
-void setup() {
-  // SERIAL MONITOR
-  Serial.begin(9600);
-  while (!Serial && millis() < 5000); // wait up to five seconds
-  Serial.println("Test Stand starting...");
+  // Read from Channel A with Gain 128, can also try CHAN_A_GAIN_64 or CHAN_B_GAIN_32
+  int32_t weightB32 = hx711.readChannelBlocking(CHAN_B_GAIN_32);
+  Serial.print("Channel B (Gain 32): ");
+  Serial.println(weightB32);
+}
 
-  // RADIO MODULE
+// function to initialize the radio module
+void init_radio() {
   // Set pins for, and reset, radio module
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -202,9 +139,10 @@ void setup() {
   }
   rf95.setTxPower(23, false);
   Serial.println("Radio init succeeded.");
+}
 
-  // TEMPERATURE TRANSDUCER
-  Wire.begin(); // Initalize I2C
+// function to initialize the temperature transducers
+void init_tt() {
   // Initialize the five different Thermocouple Amplifier
   if (!TT1O.begin(I2C_ADDRESS_TT1O)) {
     Serial.println("TT1-O not found. Check wiring!");
@@ -232,11 +170,10 @@ void setup() {
   TT1T.setThermocoupleType(MCP9600_TYPE_K);
   TT2T.setThermocoupleType(MCP9600_TYPE_K);
   TT3T.setThermocoupleType(MCP9600_TYPE_K);
+}
 
-  // LOAD CELL
-  init_hx711(); 
-
-  // PRESSURE TRANSDUCER
+// function to initialize the pressure transducers
+void init_pt() {
   pinMode(PT1I_PIN, INPUT);
   pinMode(PT2I_PIN, INPUT);
   pinMode(PT3I_PIN, INPUT);
@@ -248,12 +185,7 @@ void setup() {
   pinMode(PT1T_PIN, INPUT); 
 }
 
-// ========================================================================== //
-//                                LOOP FUNCTION                               //
-// ========================================================================== //
-
-void loop() {
-  // ----------------- RX: Receive incoming radio commands ---------------- //
+void radio_input_parsin() {
   if (rf95.available()) {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
@@ -268,24 +200,106 @@ void loop() {
       Serial.print("Received command: ");
       Serial.println(received);
 
-      eval_cmd(received)
-
+      eval_cmd(received);
+    }
   }
-  
-  // Update actuator state according to command
+}
+
+void update_actuator_state() {
   digitalWrite(PV1N_PIN, PV1N_State ? HIGH : LOW);
   digitalWrite(PV1P_PIN, PV1P_State ? HIGH : LOW);
   digitalWrite(PV1T_PIN, PV1T_State ? HIGH : LOW);
   digitalWrite(BV1O_PIN, BV1O_State ? HIGH : LOW);
   digitalWrite(BV1T_PIN, BV1T_State ? HIGH : LOW);
   digitalWrite(BV1P_PIN, BV1P_State ? HIGH : LOW);
-  digitalWrite(PV10_1_PIN, PV10_1_State ? HIGH : LOW);
-  digitalWrite(PV10_2_PIN, PV10_2_State ? HIGH : LOW);
+  digitalWrite(PV1O_1_PIN, PV1O_1_State ? HIGH : LOW);
+  digitalWrite(PV1O_2_PIN, PV1O_2_State ? HIGH : LOW);
   digitalWrite(MBV1I_1_PIN, MBV1I_1_State ? HIGH : LOW);
   digitalWrite(MBV1I_2_PIN, MBV1I_2_State ? HIGH : LOW);
+}
 
-  
-  // ------------------- TX: Transmit sensor data ----------------------- //
+// Takes in a received string and toggles states accordingly
+void eval_cmd(){
+  if (received.endsWith(" ON")) {
+    String name = received.substring(0, received.length() - 3); // Extract name before " ON"
+    // switch statement to chek for valve name 
+    switch (name) {
+      case "PV1N":
+        PV1N_State = true;
+        break;
+      case "PV1P":
+        PV1P_State = true;
+        break;
+      case "PV1T":
+        PV1T_State = true;
+        break;
+      case "BV1O":
+        BV1O_State = true;
+        break;
+      case "BV1T":
+        BV1T_State = true;
+        break;
+      case "BV1P":
+        BV1P_State = true;
+        break;
+      case "PV1O_1":
+        PV1O_1_State = true;
+        break;
+      case "PV1O_2":
+        PV1O_2_State = true;
+        break;
+      case "MBV1I_1":
+        MBV1I_1_State = true;
+        break;
+      case "MBV1I_2":
+        MBV1I_2_State = true;
+        break;
+      default:
+        Serial.println("Unknown Power Valve name.");
+    }
+  } else if (received.endsWith(" OFF")) {
+    String name = received.substring(0, received.length() - 4); // Extract name before " OFF"
+    // switch statement to chek for valve name 
+    switch (name) {
+      case "PV1N":
+        PV1N_State = false;
+        break;
+      case "PV1P":
+        PV1P_State = false;
+        break;
+      case "PV1T":
+        PV1T_State = false;
+        break;
+      case "BV1O":
+        BV1O_State = false;
+        break;
+      case "BV1T":
+        BV1T_State = false;
+        break;
+      case "BV1P":
+        BV1P_State = false;
+        break;
+      case "PV1O_1":
+        PV1O_1_State = false;
+        break;
+      case "PV1O_2":
+        PV1O_2_State = false;
+        break;
+      case "MBV1I_1":
+        MBV1I_1_State = false;
+        break;
+      case "MBV1I_2":
+        MBV1I_2_State = false;
+        break;
+      default:
+        Serial.println("Unknown Power Valve name.");
+    }
+  } else {
+    Serial.println("Unrecognized command.");
+  }
+}
+
+String output_data_parsing() {
   unsigned long currentMillis = millis();
   if (currentMillis - lastSensorTransmit >= sensorInterval) {
     lastSensorTransmit = currentMillis;
@@ -328,9 +342,52 @@ void loop() {
 
     Serial.print("Sending sensor reading: ");
     Serial.println(sensorStr);
-    
-    // Transmit the sensor data string via radio
-    rf95.send((uint8_t *)sensorStr.c_str(), sensorStr.length());
-    rf95.waitPacketSent();
+
+    return sensorStr;
   }
+}
+
+// ========================================================================== //
+//                               SETUP FUNCTION                               //
+// ========================================================================== //
+
+void setup() {
+  // SERIAL MONITOR
+  Serial.begin(9600);
+  while (!Serial && millis() < 5000); // wait up to five seconds
+  Serial.println("Test Stand starting...");
+
+  // RADIO MODULE
+  init_radio();
+
+  // I2C 
+  Wire.begin(); // Initalize I2C
+
+  // TEMPERATURE TRANSDUCER
+  init_tt(); // Initialize temperature transducers
+  
+  // LOAD CELL
+  init_hx711(); 
+
+  // PRESSURE TRANSDUCER
+  init_pt();
+}
+
+// ========================================================================== //
+//                                LOOP FUNCTION                               //
+// ========================================================================== //
+
+void loop() {
+  // ----------------- RX: Receive incoming radio commands ---------------- //
+  radio_input_parsing();
+  
+  // Update actuator state according to command
+  update_actuator_state();
+  
+  // ------------------- TX: Transmit sensor data ----------------------- //
+  String sensorStr = output_data_parsing();
+    
+  // Transmit the sensor data string via radio
+  rf95.send((uint8_t *)sensorStr.c_str(), sensorStr.length());
+  rf95.waitPacketSent();
 }
