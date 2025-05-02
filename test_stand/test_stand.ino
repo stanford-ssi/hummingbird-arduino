@@ -103,9 +103,15 @@ Adafruit_HX711 hx711(DATA_PIN, CLOCK_PIN);
 
 void lc_setup(){
   hx711.begin();
-  Serial.println("Tareing...");
-  hx711.setGainA128();
-  hx711.tare(10);
+
+  // read and toss 3 values each
+  Serial.println("Tareing....");
+  for (uint8_t t=0; t<3; t++) {
+    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_128));
+    hx711.tareA(hx711.readChannelRaw(CHAN_A_GAIN_128));
+    hx711.tareB(hx711.readChannelRaw(CHAN_B_GAIN_32));
+    hx711.tareB(hx711.readChannelRaw(CHAN_B_GAIN_32));
+  }
 }
 
 // ========================================================================== //
@@ -276,13 +282,13 @@ void eval_cmd(String received) {
   } else {
     Serial.println("Unrecognized command.");
   }
-  update_pv_state();
+  update_actuator_state();
 }
 
 /**
  * @brief Apply each actuator’s boolean state to its output pin.
  */
-void update_pv_state() {
+void update_actuator_state() {
   digitalWrite(PV1N_PIN, PV1N_State ? HIGH : LOW);
   digitalWrite(PV1P_PIN, PV1P_State ? HIGH : LOW);
   digitalWrite(PV1T_PIN, PV1T_State ? HIGH : LOW);
@@ -350,14 +356,33 @@ String read_sensor_data() {
   return "";
 }
 
+/**
+ * @brief Return a CSV string of the current on/off states of each powered valve
+ *        in the order: PV1N, PV1P, PV1T, BV1O, BV1T, BV1P, PV1O_1, PV1O_2, MBV1I_1, MBV1I_2
+ */
+String actuator_states() {
+  // Build up the CSV of boolean values
+  String states = String(PV1N_State  ? "true" : "false");
+  states += "," + String(PV1P_State  ? "true" : "false");
+  states += "," + String(PV1T_State  ? "true" : "false");
+  states += "," + String(BV1O_State  ? "true" : "false");
+  states += "," + String(BV1T_State  ? "true" : "false");
+  states += "," + String(BV1P_State  ? "true" : "false");
+  states += "," + String(PV1O_1_State ? "true" : "false");
+  states += "," + String(PV1O_2_State ? "true" : "false");
+  states += "," + String(MBV1I_1_State ? "true" : "false");
+  states += "," + String(MBV1I_2_State ? "true" : "false");
+  return states;
+}
+
 // ========================================================================== //
 //                              MAIN FUNCTIONS                                //
 // ========================================================================== //
 
 void setup() {
-  // SERIAL MONITOR
+  // Initalize serial monitor
   Serial.begin(9600);
-  while (!Serial && millis() < 5000); // wait up to five seconds
+  while (!Serial && millis() < 5000);
   Serial.println("Test Stand starting...");
 
   // Initalize I2C
@@ -379,10 +404,12 @@ void loop() {
     eval_cmd(cmd);
   }
   
-  // TX: Transmit sensor data
-  String data = read_sensor_data();
-  if (data.length()) {
-    rf95.send((uint8_t*)data.c_str(), data.length());
+  // TX: Transmit sensor data + actuator states
+  String sensor_data = read_sensor_data();
+  String actuator_data = actuator_states();
+  String data_pkg = sensor_data + actuator_data;
+  if (data_pkg.length()) {
+    rf95.send((uint8_t*)data_pkg.c_str(), data_pkg.length());
     rf95.waitPacketSent();
     Serial.println("Sensor packet sent.");
   }
