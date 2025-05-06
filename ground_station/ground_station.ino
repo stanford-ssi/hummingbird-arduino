@@ -101,3 +101,9 @@ void loop() {
     }
   }
 }
+
+void send_ping(){
+  // send a ping to the test stand
+  // default message PING_MESSAGE
+
+}
