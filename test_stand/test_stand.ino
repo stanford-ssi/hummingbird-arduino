@@ -237,3 +237,19 @@ void loop() {
     rf95.waitPacketSent();
   }
 }
+
+/* 
+ * Plan for loss-of-comms abort:
+ * receive pings from the ground station, and stop after 
+ * 30 seconds of not receiving any pings.
+ */
+
+ void checkForReceivePings() {
+  // first define pings, define ping to be PING_MESSAGE
+  // receive ping, and reset timer
+  // if timer reaches 30 seconds, start auto-abort sequence
+
+ }
+
+
+
