@@ -24,6 +24,8 @@ TX: Collects data from sensors and transmits them to the ground station
 // RH_RF95 object for radio module
 #define RF95_FREQ 915.0
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
+// define the ping message to receive
+#define PING_MESSAGE 0x10
 
 // MCP9600 object for thermocouple sensor
 Adafruit_MCP9600 mcp;
@@ -53,6 +55,10 @@ const uint8_t CLOCK_PIN = 3;
 
 // HX711 Object for load cell sensor
 Adafruit_HX711 hx711(DATA_PIN, CLOCK_PIN);
+
+// abort sequence 
+bool abort = false;
+void checkForReceivePings();
 
 void init_hx711(){
   hx711.begin();
@@ -159,6 +165,7 @@ void setup() {
 void loop() {
   // RX: Check for incoming radio commands (non-blocking)
   if (rf95.available()) {
+    checkForReceivePings(); // checking for whether abort sequence should be turned on
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
     if (rf95.recv(buf, &len)) {
@@ -248,6 +255,21 @@ void loop() {
   // first define pings, define ping to be PING_MESSAGE
   // receive ping, and reset timer
   // if timer reaches 30 seconds, start auto-abort sequence
+  if (rf95.available()) {
+    uint8_t incoming_msg;
+    uint8_t len = 1;  // 1 byte
+    if (rf95.recv(incoming_msg, &len)) {
+      // check the message
+      if (incoming_msg == PING_MESSAGE) {
+        Serial.println("Status clear, no abort sequence.")
+        abort = false;
+      } else {
+        Serial.println("NOT RECEIVING PING, INTERPRETING AS LOSS OF COMMS");
+        Serial.println("INITIATING ABORT SEQUENCE");
+        abort = true;
+      }
+    }
+  }
 
  }
 

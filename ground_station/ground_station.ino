@@ -20,6 +20,10 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 File dataFile;
 #define FILENAME "data-T2-040425.txt"
 
+// Message ping for loss of comms detection
+#define PING_MESSAGE 0x10
+void send_ping();
+
 void setup() {
   Serial.begin(9600);
   while (!Serial && millis() < 5000);  // Wait for Serial up to 5 seconds
@@ -105,5 +109,6 @@ void loop() {
 void send_ping(){
   // send a ping to the test stand
   // default message PING_MESSAGE
-
+  rf95.send(PING_MESSAGE, 1); // 1 byte message
+  rf95.waitPacketSent();
 }
