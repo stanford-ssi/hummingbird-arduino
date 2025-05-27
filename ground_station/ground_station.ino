@@ -11,14 +11,12 @@ Rx: Receives sensor reading from the test stand and stores that data into the SD
 #define RFM95_CS   10     // CS pin for radio module
 #define RFM95_RST  1      // RST pin for radio module
 #define RFM95_INT  0      // G0 (Interupt) for radio module
-
-// RH_RF95 object for radio module
 #define RF95_FREQ 915.0
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // File object for SD card logging
 File dataFile;
-#define FILENAME "data-T2-040425.txt"
+#define FILENAME "coldflow_v1.txt"
 
 void setup() {
   Serial.begin(9600);
@@ -54,9 +52,9 @@ void setup() {
 
   // create SD header
   dataFile = SD.open(FILENAME, FILE_WRITE); // file where data will be stored
-  dataFile.println("Hydrostatic Testing Test Result");
-  dataFile.println("*************************");
-  dataFile.println("Time (ms), PT1-I (psi), PT2-I (psi), PT3-I (psi), PT4-I (psi), PT5-I (psi), PT1-N (psi), PT1-O (psi), PT1-P (psi), PT1-T (psi)");
+  dataFile.println("Cold Flow Test Result");
+  dataFile.println("*********************");
+  dataFile.println("Time,PT1-I");
   dataFile.close();
 
 }
