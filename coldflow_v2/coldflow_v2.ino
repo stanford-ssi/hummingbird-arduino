@@ -3,7 +3,8 @@
 
 #include <RH_RF95.h>
 #include <SPI.h>
-#include "Arduino_MCP9600.h"
+#include <Adafruit_MCP9600.h>
+#include <Adafruit_HX711.h>
 
 // LoRa definitions
 #define RFM95_CS   10
@@ -199,7 +200,7 @@ void loop() {
           pulseValve(valvePinPurple);
           mbvValveState = true;
           Serial.println("MBV closed.");
-        } else if (cmd == "1" && mbvValveState = true) {
+        } else if (cmd == "1" && mbvValveState == true) {
           digitalWrite(valvePinPurple, LOW);
           pulseValve(valvePinBlack);
           mbvValveState = false;
@@ -251,7 +252,7 @@ void loop() {
     int PT1_N_reading = analogRead(PT1_N);
     int PT1_O_reading = analogRead(PT1_O);
     int PT1_T_reading = analogRead(PT1_T);
-    int PT2_I_reading = analogRead(PT1_I);
+    int PT2_I_reading = analogRead(PT2_I);
 
     // TT readings from I2C
     float tt1o_temp = TT1O.readThermocouple();       // TT1-O
@@ -275,7 +276,7 @@ void loop() {
     Serial.print("MBV State: ");
     Serial.println(mbvValveState ? "OPEN" : "CLOSED");
     Serial.print("PV1_T State: ");
-    Serial.println(PT1_T_valveState ? "OPEN" : "CLOSED");
+    Serial.println(PV1_T_valveState ? "OPEN" : "CLOSED");
     Serial.print("PV1_O State: ");
     Serial.println(PV1_O_valveState ? "OPEN" : "CLOSED");
   }
