@@ -42,7 +42,7 @@ void pt_setup() {
  */
 
 // 3 TTs - will have to check actual TT I2C address
-#define I2C_ADDRESS_TT1O (0x67)
+#define I2C_ADDRESS_TT1O (0x66)
 #define I2C_ADDRESS_TT1T (0x65)
 #define I2C_ADDRESS_TT2T (0x64)
 // MCP9600 object for thermocouple sensor
