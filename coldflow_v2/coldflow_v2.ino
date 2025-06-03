@@ -20,9 +20,9 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
  * 4 PTs used in WK10 cold flow test. Uses Teensy built-in ADC. Connects to analog pins.
  */
 const int PT1_N = 23; // original one also used in previous test
-const int PT1_O = 22; // PT on oxidizer line
-const int PT1_T = 21; // on the top of the tank
-const int PT2_I = 20; // at the bottom of the tank
+const int PT1_O = 38; // PT on oxidizer line
+const int PT1_T = 39; // on the top of the tank
+const int PT2_I = 40; // at the bottom of the tank
 
 // PT reading interval
 unsigned long lastRead = 0;
@@ -111,8 +111,8 @@ const unsigned long pulseDuration = 500;
  * PV 
  * 2 used for WK10 cold flow test. Uses digital pins to be driven high or low.
  */
-const int PV1_T = 16; // tank bleed valve
-const int PV1_O = 15; // oxidizer valve
+const int PV1_T = 27; // tank bleed valve
+const int PV1_O = 28; // oxidizer valve
 
 // PV valve state
 bool PV1_T_valveState = false;
