@@ -195,15 +195,15 @@ void loop() {
        *  All are toggles.
        */
       if (!pulsing) {
-        if (cmd == "1" && mbvValveState == false) {
+        if (cmd == "1" && mbvValveState == true) {
           digitalWrite(valvePinBlack, LOW);
           pulseValve(valvePinPurple);
-          mbvValveState = true;
+          mbvValveState = digitalRead(valvePinPurple) == HIGH ? false : true;
           Serial.println("MBV closed.");
-        } else if (cmd == "1" && mbvValveState == true) {
+        } else if (cmd == "1" && mbvValveState == false) {
           digitalWrite(valvePinPurple, LOW);
           pulseValve(valvePinBlack);
-          mbvValveState = false;
+          mbvValveState = digitalRead(valvePinBlack) == HIGH ? true : false;
           Serial.println("MBV opened.");
         } else {
           Serial.println("Unknown command.");
@@ -215,21 +215,21 @@ void loop() {
       // control logic for other PVs
       if (cmd == "2" && PV1_T_valveState == false) {
         digitalWrite(PV1_T, HIGH);
-        PV1_T_valveState = true;
+        PV1_T_valveState = digitalRead(PV1_T) == HIGH ? true : false;
         Serial.println("PV1_T opened");
       } else if (cmd == "2" && PV1_T_valveState == true) {
         digitalWrite(PV1_T, LOW);
-        PV1_T_valveState = false;
+        PV1_T_valveState = digitalRead(PV1_T) == LOW ? false : true;
         Serial.println("PV1_T closed");
       }
 
       if (cmd == "3" && PV1_O_valveState == false) {
         digitalWrite(PV1_O, HIGH);
-        PV1_O_valveState = true;
+        PV1_O_valveState = digitalRead(PV1_O) == HIGH ? true : false;
         Serial.println("PV1_O opened");
       } else if (cmd == "3" && PV1_O_valveState == true) {
         digitalWrite(PV1_O, LOW);
-        PV1_O_valveState = false;
+        PV1_O_valveState = digitalRead(PV1_O == LOW) ? false : true;
         Serial.println("PV1_O closed");
       }
     }
@@ -265,20 +265,18 @@ void loop() {
 
     // Construct and send CSV-formatted message
     String msg = "Time: " + String(millis()) + "\n"
-                    + "PT1_N: " + String(convert2psi(PT1_N_reading), 1) + " psi | PT1_O: " + String(convert2psi(PT1_O_reading), 1) + " psi | PT1_T: " + String(convert2psi(PT1_T_reading), 1) + " psi | PT2_I: " + String(convert2psi(PT2_I_reading), 1) + "psi\n"
+                    + "PT1_N: " + String(PT1_N_reading) + " | PT1_O: " + String(PT1_O_reading) + " | PT1_T: " + String(PT1_T_reading) + " | PT2_I: " + String(PT2_I_reading) + "\n"
+                    // + "PT1_N: " + String(convert2psi(PT1_N_reading), 1) + " psi | PT1_O: " + String(convert2psi(PT1_O_reading), 1) + " psi | PT1_T: " + String(convert2psi(PT1_T_reading), 1) + " psi | PT2_I: " + String(convert2psi(PT2_I_reading), 1) + "psi\n"
                     + "TT1_O: " + String(tt1o_temp,1) + " C | TT1_T: " + String(tt1t_temp) + " C | TT2_T: " + String(tt2t_temp) + "C \n"
-                    + "LC: " + String(lc1_val) + " (unit) \n";
+                    + "LC: " + String(lc1_val) + " (unit) \n"
+                    + "MBV State: " + (mbvValveState ? "OPEN" : "CLOSED") + " | " +
+                    + "PV1_T State: " + (PV1_T_valveState ? "OPEN" : "CLOSED") + " | " +
+                    + "PV1_O State: " + (PV1_O_valveState ? "OPEN" : "CLOSED") + "\n";
     rf95.send((uint8_t *)msg.c_str(), msg.length());
     rf95.waitPacketSent();
 
     // Also print locally
     Serial.print(msg);
-    Serial.print("MBV State: ");
-    Serial.println(mbvValveState ? "OPEN" : "CLOSED");
-    Serial.print("PV1_T State: ");
-    Serial.println(PV1_T_valveState ? "OPEN" : "CLOSED");
-    Serial.print("PV1_O State: ");
-    Serial.println(PV1_O_valveState ? "OPEN" : "CLOSED");
   }
 }
 
