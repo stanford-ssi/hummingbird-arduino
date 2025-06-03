@@ -229,7 +229,7 @@ void loop() {
         Serial.println("PV1_O opened");
       } else if (cmd == "3" && PV1_O_valveState == true) {
         digitalWrite(PV1_O, LOW);
-        PV1_O_valveState = digitalRead(PV1_O == LOW) ? false : true;
+        PV1_O_valveState = digitalRead(PV1_O) == LOW ? false : true;
         Serial.println("PV1_O closed");
       }
     }
